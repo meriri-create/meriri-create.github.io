@@ -1,0 +1,15 @@
+{
+  "name": "わたしの記録アプリ",
+  "short_name": "わたしの記録",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f9f9f9",
+  "theme_color": "#6a1b9a",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
