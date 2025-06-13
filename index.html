@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>わたしの記録アプリ</title>
+    <title>わたしの記録</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#6a1b9a">
@@ -68,7 +68,8 @@
 <body>
     <div class="container">
         <div id="login-screen" class="screen">
-            <h1>わたしの健康記録</h1><h2>ようこそ！</h2>
+            <h1>わたしの記録</h1>
+            <h2>ようこそ！</h2>
             <div class="form-group"><label for="login-email">メールアドレス</label><input type="email" id="login-email" placeholder="email@example.com" autocomplete="email"></div>
             <div class="form-group"><label for="login-password">パスワード</label><input type="password" id="login-password" placeholder="6文字以上" autocomplete="current-password"></div>
             <div class="button-group">
@@ -82,7 +83,7 @@
             <button id="save-setup-btn">設定して開始</button>
         </div>
         <div id="main-app" class="screen">
-            <h1 id="welcome-message">わたしの健康記録</h1>
+            <h1 id="welcome-message">わたしの記録</h1>
             <p style="text-align:center;">現在の目標: <strong id="display-target-weight"></strong> kg</p>
             <div class="badge-area"><h3>獲得バッジ</h3><div id="badge-list"></div></div>
             <h2>体重の推移グラフ</h2>
@@ -113,7 +114,7 @@
         <div class="modal-content">
             <span class="close-btn">&times;</span>
             <div class="guide">
-                <h2 style="margin-top: 10px;">『わたしの記録アプリ』使い方ガイド 📖✨</h2>
+                <h2 style="margin-top: 10px;">『わたしの記録』使い方ガイド 📖✨</h2>
                 <p>このアプリは、あなたの頑張りを「記録」し、「見える化」し、「楽しく」続けるための、あなただけの健康管理アプリです。</p><hr>
                 <h3>🚀 ステップ1：最初の設定</h3>
                 <ul><li><strong>ユーザー登録:</strong> メールアドレスと6文字以上のパスワードで新規登録します。</li><li><strong>目標体重の設定:</strong> 次に、あなたの目標体重を決めます。この目標は後からいつでも変更できます。</li></ul>
@@ -190,7 +191,7 @@
                 currentUser = user;
                 const userDocRef = db.collection('users').doc(user.uid);
                 const userDoc = await userDocRef.get();
-                if (userDoc.exists) {
+                if (userDoc.exists()) {
                     const data = userDoc.data();
                     userSettings = data.settings || {};
                     userBadges = data.badges || {};
@@ -245,8 +246,8 @@
         
         function showMainApp() {
             if (!currentUser) return;
-            // ★変更点：タイトルを固定の文言に
-            welcomeMessage.textContent = 'わたしの健康記録';
+            // ★変更点：ここも固定の文言に統一
+            welcomeMessage.textContent = 'わたしの記録';
             dateInput.value = new Date().toISOString().split('T')[0];
             loadRecordForDate(dateInput.value);
             renderAll();
