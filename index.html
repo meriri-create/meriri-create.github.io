@@ -68,8 +68,7 @@
 <body>
     <div class="container">
         <div id="login-screen" class="screen">
-            <h1>わたしの記録</h1>
-            <h2>ようこそ！</h2>
+            <h1>わたしの記録</h1><h2>ようこそ！</h2>
             <div class="form-group"><label for="login-email">メールアドレス</label><input type="email" id="login-email" placeholder="email@example.com" autocomplete="email"></div>
             <div class="form-group"><label for="login-password">パスワード</label><input type="password" id="login-password" placeholder="6文字以上" autocomplete="current-password"></div>
             <div class="button-group">
@@ -131,7 +130,6 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // --- Firebaseの初期化 ---
         const firebaseConfig = {
             apiKey: "AIzaSyDn3Gm8M0tVHSof3UdZjZ6P2NpQEo6Sj_U",
             authDomain: "mydata-75f6a.firebaseapp.com",
@@ -145,7 +143,6 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // --- DOM要素の取得 ---
         const screens = { login: document.getElementById('login-screen'), setup: document.getElementById('setup-screen'), main: document.getElementById('main-app') };
         const loginEmailInput = document.getElementById('login-email');
         const loginPasswordInput = document.getElementById('login-password');
@@ -184,14 +181,17 @@
             targetAchieved: { title: '目標達成', description: '目標体重に到達！おめでとう！', icon: '🎉' }
         };
 
-        function showScreen(screenName) { Object.values(screens).forEach(s=>s.classList.remove('active')); if(screens[screenName]) screens[screenName].classList.add('active'); }
+        function showScreen(screenName) {
+            Object.values(screens).forEach(s => s.classList.remove('active'));
+            if(screens[screenName]) screens[screenName].classList.add('active');
+        }
 
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 currentUser = user;
                 const userDocRef = db.collection('users').doc(user.uid);
                 const userDoc = await userDocRef.get();
-                if (userDoc.exists()) {
+                if (userDoc.exists) {
                     const data = userDoc.data();
                     userSettings = data.settings || {};
                     userBadges = data.badges || {};
@@ -224,7 +224,11 @@
             } catch (error) { alert("ログインエラー: " + error.message); }
         });
         
-        logoutBtn.addEventListener('click', () => { if (confirm('ログアウトしますか？')) { auth.signOut(); } });
+        logoutBtn.addEventListener('click', () => {
+            if (confirm('ログアウトしますか？')) {
+                auth.signOut();
+            }
+        });
 
         saveSetupBtn.addEventListener('click', async () => {
             const targetWeight = parseFloat(targetWeightInput.value);
@@ -234,19 +238,22 @@
                 await db.collection('users').doc(currentUser.uid).set({ settings: userSettings, badges: userBadges });
                 await loadRecordsFromFirestore();
                 showMainApp();
-            } else { alert('有効な目標体重を入力してください。'); }
+            } else {
+                alert('有効な目標体重を入力してください。');
+            }
         });
         
         async function loadRecordsFromFirestore() {
             if (!currentUser) return;
             const recordsSnapshot = await db.collection('users').doc(currentUser.uid).collection('records').get();
             dailyRecords = {};
-            recordsSnapshot.forEach(doc => { dailyRecords[doc.id] = doc.data(); });
+            recordsSnapshot.forEach(doc => {
+                dailyRecords[doc.id] = doc.data();
+            });
         }
         
         function showMainApp() {
             if (!currentUser) return;
-            // ★変更点：ここも固定の文言に統一
             welcomeMessage.textContent = 'わたしの記録';
             dateInput.value = new Date().toISOString().split('T')[0];
             loadRecordForDate(dateInput.value);
@@ -263,7 +270,10 @@
         }
         
         dateInput.addEventListener('change', () => loadRecordForDate(dateInput.value));
-        exerciseCheck.addEventListener('change', () => exerciseMemoGroup.style.display = exerciseCheck.checked ? 'block' : 'none');
+        
+        exerciseCheck.addEventListener('change', () => {
+            exerciseMemoGroup.style.display = exerciseCheck.checked ? 'block' : 'none';
+        });
 
         function loadRecordForDate(date) {
             const record = dailyRecords[date];
@@ -280,11 +290,13 @@
             const date = dateInput.value;
             const recordData = {
                 weight: weightInput.value ? parseFloat(weightInput.value) : null,
-                didExercise: exerciseCheck.checked, isPeriod: periodCheck.checked,
+                didExercise: exerciseCheck.checked,
+                isPeriod: periodCheck.checked,
                 exerciseMemo: exerciseMemo.value.trim()
             };
             if (!date || (recordData.weight === null && !recordData.didExercise && !recordData.isPeriod)) {
-                alert('日付を入力し、体重、運動、体調記録日のいずれかを記録してください。'); return;
+                alert('日付を入力し、体重、運動、体調記録日のいずれかを記録してください。');
+                return;
             }
             try {
                 await db.collection('users').doc(currentUser.uid).collection('records').doc(date).set(recordData, { merge: true });
@@ -292,36 +304,45 @@
                 await checkAndAwardBadges();
                 renderAll();
                 alert('記録しました！');
-            } catch (error) { alert("記録の保存に失敗しました: " + error.message); }
+            } catch (error) {
+                alert("記録の保存に失敗しました: " + error.message);
+            }
         });
 
         function renderHistory() {
-            historyList.innerHTML = ''; if (!currentUser) return;
+            historyList.innerHTML = '';
+            if (!currentUser) return;
             const sortedDates = Object.keys(dailyRecords).sort((a, b) => new Date(b) - new Date(a));
-            if (sortedDates.length === 0) { historyList.innerHTML = '<li>記録はまだありません。</li>'; return; }
+            if (sortedDates.length === 0) {
+                historyList.innerHTML = '<li>記録はまだありません。</li>';
+                return;
+            }
             sortedDates.forEach(date => {
                 const record = dailyRecords[date];
                 const li = document.createElement('li');
                 li.classList.toggle('rest-day', !record.didExercise);
                 const periodMark = record.isPeriod ? `<i class="period-mark" title="体調記録日">🌙</i>` : '';
                 const dateHTML = `<div class="record-date">${date}${periodMark}</div>`;
-                const weightHTML = record.weight ? `<div class="record-weight">⚖️ 体重: <strong>${record.weight.toFixed(1)} kg</strong></div>` : '';
+                const weightHTML = record.weight != null ? `<div class="record-weight">⚖️ 体重: <strong>${record.weight.toFixed(1)} kg</strong></div>` : '';
                 let exerciseHTML = '';
                 if (record.didExercise) {
                     exerciseHTML = `<div class="record-exercise">💪 運動しました</div>`;
                     if (record.exerciseMemo) exerciseHTML += `<div class="record-exercise-memo">${record.exerciseMemo.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>`;
-                } else if (!record.isPeriod) { exerciseHTML = `<div class="record-exercise" style="color: #888;">🛌 運動: おやすみ</div>`; }
+                } else if (!record.isPeriod) {
+                    exerciseHTML = `<div class="record-exercise" style="color: #888;">🛌 運動: おやすみ</div>`;
+                }
                 li.innerHTML = `<div class="record-details">${dateHTML}${weightHTML}${exerciseHTML}</div><button class="delete-btn" data-date="${date}">削除</button>`;
                 historyList.appendChild(li);
             });
         }
         
         async function checkAndAwardBadges(){
-            if (!currentUser) return;
+            if (!currentUser || !userSettings.targetWeight) return;
             let newBadgeAwarded = false;
             const checkAndSetBadge = (badgeId, condition) => {
                 if (!userBadges[badgeId] && condition) {
-                    userBadges[badgeId] = true; newBadgeAwarded = true;
+                    userBadges[badgeId] = true;
+                    newBadgeAwarded = true;
                     setTimeout(()=>alert(`🎉 新しいバッジ【${badges[badgeId].title}】を獲得しました！`), 100);
                 }
             };
@@ -329,29 +350,58 @@
             checkAndSetBadge('firstStep', recordCount >= 1);
             checkAndSetBadge('record7', recordCount >= 7);
             checkAndSetBadge('record30', recordCount >= 30);
-            const weights = Object.values(dailyRecords).map(r => r.weight).filter(w => w != null);
-            if (weights.length > 0 && userSettings.targetWeight) {
-                const initialWeights = Object.entries(dailyRecords).filter(([,r])=>r.weight!=null).sort((a,b)=>new Date(a[0])-new Date(b[0]));
-                const initialWeight = initialWeights[0][1].weight;
-                const latestWeight = weights[weights.length - 1];
-                checkAndSetBadge('weightLoss1', initialWeight - latestWeight >= 1);
+            
+            const weightsWithDates = Object.entries(dailyRecords)
+                .map(([date, record]) => ({ date, weight: record.weight }))
+                .filter(item => item.weight != null)
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            if (weightsWithDates.length > 0) {
+                const latestWeight = weightsWithDates[weightsWithDates.length - 1].weight;
                 checkAndSetBadge('targetAchieved', latestWeight <= userSettings.targetWeight);
+                if (weightsWithDates.length > 1) {
+                    const initialWeight = weightsWithDates[0].weight;
+                    checkAndSetBadge('weightLoss1', initialWeight - latestWeight >= 1);
+                }
             }
-            if(newBadgeAwarded){ await db.collection('users').doc(currentUser.uid).update({ badges: userBadges }); }
+            if(newBadgeAwarded){
+                await db.collection('users').doc(currentUser.uid).update({ badges: userBadges });
+            }
         }
         function renderBadges(){
             badgeList.innerHTML="";
-            for(const t in badges){const r=badges[t],a=document.createElement("div");a.classList.add("badge"),userBadges[t]||a.classList.add("locked"),a.title=r.description,a.innerHTML=`<span class="badge-icon">${r.icon}</span><span class="badge-title">${r.title}</span>`,badgeList.appendChild(a)}
+            for(const id in badges){
+                const badge = badges[id];
+                const el = document.createElement("div");
+                el.classList.add("badge");
+                if(!userBadges[id]) el.classList.add("locked");
+                el.title = badge.description;
+                el.innerHTML = `<span class="badge-icon">${badge.icon}</span><span class="badge-title">${badge.title}</span>`;
+                badgeList.appendChild(el);
+            }
         }
         function renderWeightChart() {
             if (!currentUser) return;
             const targetWeight = userSettings.targetWeight;
             const sortedDates = Object.keys(dailyRecords).sort((a, b) => new Date(a) - new Date(b));
-            const labels = []; const dataPoints = [];
-            sortedDates.forEach(date => { if (dailyRecords[date].weight != null) { labels.push(date); dataPoints.push(dailyRecords[date].weight); } });
+            const labels = [];
+            const dataPoints = [];
+            sortedDates.forEach(date => {
+                if (dailyRecords[date].weight != null) {
+                    labels.push(date);
+                    dataPoints.push(dailyRecords[date].weight);
+                }
+            });
             if (weightChart) { weightChart.destroy(); }
             weightChart = new Chart(chartCanvas, {
-                type: 'line', data: { labels: labels, datasets: [ { label: '体重 (kg)', data: dataPoints, borderColor: 'rgba(106, 27, 154, 0.8)', backgroundColor: 'rgba(106, 27, 154, 0.1)', fill: true, tension: 0.1 }, { label: '目標体重', data: Array(labels.length).fill(targetWeight), borderColor: 'var(--target-line-color)', borderDash: [5, 5], pointRadius: 0, fill: false, borderWidth: 2 } ] },
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: '体重 (kg)', data: dataPoints, borderColor: 'rgba(106, 27, 154, 0.8)', backgroundColor: 'rgba(106, 27, 154, 0.1)', fill: true, tension: 0.1 },
+                        { label: '目標体重', data: Array(labels.length).fill(targetWeight), borderColor: 'var(--target-line-color)', borderDash: [5, 5], pointRadius: 0, fill: false, borderWidth: 2 }
+                    ]
+                },
                 options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: false } } }
             });
         }
@@ -385,9 +435,11 @@
                 try {
                     const recordsRef = db.collection('users').doc(currentUser.uid).collection('records');
                     const snapshot = await recordsRef.get();
-                    const batch = db.batch();
-                    snapshot.docs.forEach(doc => batch.delete(doc.ref));
-                    await batch.commit();
+                    if(snapshot.size > 0) {
+                        const batch = db.batch();
+                        snapshot.docs.forEach(doc => batch.delete(doc.ref));
+                        await batch.commit();
+                    }
                     await db.collection('users').doc(currentUser.uid).update({badges: {}});
                     dailyRecords = {}; userBadges = {};
                     renderAll();
