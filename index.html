@@ -4,11 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>わたしの記録アプリ</title>
+    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#6a1b9a">
+    
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -65,7 +68,7 @@
 <body>
     <div class="container">
         <div id="login-screen" class="screen">
-            <h1>わたしの記録アプリ</h1><h2>ようこそ！</h2>
+            <h1>わたしの健康記録</h1><h2>ようこそ！</h2>
             <div class="form-group"><label for="login-email">メールアドレス</label><input type="email" id="login-email" placeholder="email@example.com" autocomplete="email"></div>
             <div class="form-group"><label for="login-password">パスワード</label><input type="password" id="login-password" placeholder="6文字以上" autocomplete="current-password"></div>
             <div class="button-group">
@@ -73,15 +76,13 @@
                 <button id="signup-btn" class="sub-button">新規登録はこちら</button>
             </div>
         </div>
-
         <div id="setup-screen" class="screen">
             <h2>ようこそ！</h2><p>最初に目標体重を設定しましょう。</p>
             <div class="form-group"><label for="target-weight">目標体重 (kg)</label><input type="number" id="target-weight" step="0.1" placeholder="例: 65.0"></div>
             <button id="save-setup-btn">設定して開始</button>
         </div>
-
         <div id="main-app" class="screen">
-            <h1 id="welcome-message"></h1>
+            <h1 id="welcome-message">わたしの健康記録</h1>
             <p style="text-align:center;">現在の目標: <strong id="display-target-weight"></strong> kg</p>
             <div class="badge-area"><h3>獲得バッジ</h3><div id="badge-list"></div></div>
             <h2>体重の推移グラフ</h2>
@@ -92,7 +93,7 @@
                 <div class="form-group"><label for="weight-input">体重 (kg)</label><input type="number" id="weight-input" step="0.1" placeholder="今日の体重を入力"></div>
                 <div class="form-group">
                     <div class="checkbox-group"><input type="checkbox" id="exercise-check"><label for="exercise-check">💪 運動しましたか？</label></div>
-                    <div class="checkbox-group"><input type="checkbox" id="period-check"><label for="period-check">🌙 生理日でしたか？</label></div>
+                    <div class="checkbox-group"><input type="checkbox" id="period-check"><label for="period-check">🌙 体調記録日</label></div>
                 </div>
                 <div class="form-group" id="exercise-memo-group" style="display: none;"><label for="exercise-memo">運動内容</label><textarea id="exercise-memo" rows="3" placeholder="例: ジムでマシントレーニング30分"></textarea></div>
                 <button type="submit">この内容で記録する</button>
@@ -104,7 +105,7 @@
                 <button id="edit-target-btn" class="sub-button">🎯 目標を再設定</button>
                 <button id="logout-btn" class="sub-button">ログアウト</button>
             </div>
-            <button id="reset-data-btn" class="reset-btn">🗑️ このユーザーの全データをリセット</button>
+            <button id="reset-data-btn" class="reset-btn">🗑️ このユーザーの全記録をリセット</button>
         </div>
     </div>
     
@@ -118,9 +119,9 @@
                 <ul><li><strong>ユーザー登録:</strong> メールアドレスと6文字以上のパスワードで新規登録します。</li><li><strong>目標体重の設定:</strong> 次に、あなたの目標体重を決めます。この目標は後からいつでも変更できます。</li></ul>
                 <h3>✍️ ステップ2：毎日の記録</h3>
                 <p>「ちょこっと記録」エリアで、以下の項目を入力して紫色の「記録する」ボタンを押します。</p>
-                <ul><li><strong>体重:</strong> その日の体重を入力します。</li><li><strong>運動 `💪`:</strong> 運動したらチェックを入れ、内容をメモできます。</li><li><strong>生理日 `🌙`:</strong> 生理日であれば、ここにチェックを入れます。</li></ul>
+                <ul><li><strong>体重:</strong> その日の体重を入力します。</li><li><strong>運動 `💪`:</strong> 運動したらチェックを入れ、内容をメモできます。</li><li><strong>体調記録日 `🌙`:</strong> 生理など、体調に変化があった日にチェックを入れます。</li></ul>
                 <h3>📊 ステップ3：自分の頑張りを振り返る</h3>
-                <ul><li><strong>獲得バッジ `🏆`:</strong> あなたの頑張りに応じて、様々なバッジがもらえます！</li><li><strong>体重の推移グラフ `📈`:</strong> 体重の変化（紫の線）と目標（赤い点線）が一目でわかります。</li><li><strong>記録カレンダー `🗓️`:</strong> 過去の記録が一覧で表示されます。生理日には `🌙` マークがつきます。</li></ul>
+                <ul><li><strong>獲得バッジ `🏆`:</strong> あなたの頑張りに応じて、様々なバッジがもらえます！</li><li><strong>体重の推移グラフ `📈`:</strong> 体重の変化（紫の線）と目標（赤い点線）が一目でわかります。</li><li><strong>記録カレンダー `🗓️`:</strong> 過去の記録が一覧で表示されます。体調記録日には `🌙` マークがつきます。</li></ul>
                 <h3>⚙️ ステップ4：便利な機能</h3>
                 <ul><li><strong>目標を再設定 `🎯`:</strong> ボタン一つで、いつでも目標体重を変更できます。</li><li><strong>ログアウト:</strong> 使い終わったらログアウトできます。</li></ul>
             </div>
@@ -207,6 +208,7 @@
         signupBtn.addEventListener('click', async () => {
             const email = loginEmailInput.value;
             const password = loginPasswordInput.value;
+            if (!email || !password) { alert("メールアドレスとパスワードを入力してください。"); return; }
             try {
                 await auth.createUserWithEmailAndPassword(email, password);
             } catch (error) { alert("登録エラー: " + error.message); }
@@ -215,6 +217,7 @@
         loginBtn.addEventListener('click', async () => {
             const email = loginEmailInput.value;
             const password = loginPasswordInput.value;
+            if (!email || !password) { alert("メールアドレスとパスワードを入力してください。"); return; }
             try {
                 await auth.signInWithEmailAndPassword(email, password);
             } catch (error) { alert("ログインエラー: " + error.message); }
@@ -242,7 +245,8 @@
         
         function showMainApp() {
             if (!currentUser) return;
-            welcomeMessage.textContent = (currentUser.email || 'ゲスト') + 'の記録';
+            // ★変更点：タイトルを固定の文言に
+            welcomeMessage.textContent = 'わたしの健康記録';
             dateInput.value = new Date().toISOString().split('T')[0];
             loadRecordForDate(dateInput.value);
             renderAll();
@@ -279,7 +283,7 @@
                 exerciseMemo: exerciseMemo.value.trim()
             };
             if (!date || (recordData.weight === null && !recordData.didExercise && !recordData.isPeriod)) {
-                alert('日付を入力し、体重、運動、生理日のいずれかを記録してください。'); return;
+                alert('日付を入力し、体重、運動、体調記録日のいずれかを記録してください。'); return;
             }
             try {
                 await db.collection('users').doc(currentUser.uid).collection('records').doc(date).set(recordData, { merge: true });
@@ -325,7 +329,7 @@
             checkAndSetBadge('record7', recordCount >= 7);
             checkAndSetBadge('record30', recordCount >= 30);
             const weights = Object.values(dailyRecords).map(r => r.weight).filter(w => w != null);
-            if (weights.length > 0) {
+            if (weights.length > 0 && userSettings.targetWeight) {
                 const initialWeights = Object.entries(dailyRecords).filter(([,r])=>r.weight!=null).sort((a,b)=>new Date(a[0])-new Date(b[0]));
                 const initialWeight = initialWeights[0][1].weight;
                 const latestWeight = weights[weights.length - 1];
@@ -352,6 +356,7 @@
         }
         
         editTargetBtn.addEventListener('click', async () => {
+            if (!currentUser) return;
             const currentTarget = userSettings.targetWeight;
             const newTargetStr = prompt('新しい目標体重(kg)を入力してください。', currentTarget);
             if (newTargetStr === null) return;
@@ -376,15 +381,17 @@
         resetDataBtn.addEventListener('click', async () => {
             if (confirm(`本当にこのユーザーの全ての記録を削除しますか？この操作は元に戻せません。`)) {
                 if(!currentUser) return;
-                const recordsRef = db.collection('users').doc(currentUser.uid).collection('records');
-                const snapshot = await recordsRef.get();
-                const batch = db.batch();
-                snapshot.docs.forEach(doc => batch.delete(doc.ref));
-                await batch.commit();
-                await db.collection('users').doc(currentUser.uid).update({badges: {}});
-                dailyRecords = {}; userBadges = {};
-                renderAll();
-                alert('全記録データをリセットしました。');
+                try {
+                    const recordsRef = db.collection('users').doc(currentUser.uid).collection('records');
+                    const snapshot = await recordsRef.get();
+                    const batch = db.batch();
+                    snapshot.docs.forEach(doc => batch.delete(doc.ref));
+                    await batch.commit();
+                    await db.collection('users').doc(currentUser.uid).update({badges: {}});
+                    dailyRecords = {}; userBadges = {};
+                    renderAll();
+                    alert('全記録データをリセットしました。');
+                } catch(error) { alert("リセットに失敗しました: " + error.message); }
             }
         });
         showGuideBtn.addEventListener('click', () => { guideModal.style.display = 'block'; });
