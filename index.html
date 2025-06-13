@@ -4,17 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>わたしの記録アプリ</title>
-    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#6a1b9a">
-    
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* (CSSは前回から変更ありません) */
         :root {
             --primary-color: #6a1b9a; --secondary-color: #f3e5f5; --accent-color: #ffab00;
             --text-color: #333; --border-color: #ddd; --success-color: #28a745;
@@ -31,19 +27,50 @@
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-weight: bold; }
         input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="date"], textarea { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        .button-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
-        /* (その他のCSSも省略) */
+        textarea { resize: vertical; }
+        .checkbox-group { display: flex; align-items: center; padding: 10px; background-color: var(--bg-color); border-radius: 8px; margin-bottom: 10px; }
+        .checkbox-group label { margin: 0 0 0 10px; font-weight: normal; }
+        input[type="checkbox"] { width: 20px; height: 20px; flex-shrink: 0; }
+        button { width: 100%; padding: 15px; background: linear-gradient(45deg, var(--primary-color), #9c4dcc); color: #fff; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .button-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .sub-button { background: #757575; font-size: 14px; padding: 12px; flex-grow: 1; border-radius: 8px; }
+        .reset-btn { background: var(--danger-color); margin-top: 10px; }
+        .history-list { list-style-type: none; padding: 0; max-height: 400px; overflow-y: auto; }
+        .history-list li { background-color: #fff; border: 1px solid var(--border-color); border-left: 5px solid var(--success-color); padding: 15px; border-radius: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; }
+        .history-list li.rest-day { background-color: var(--rest-day-bg); border-left: 5px solid var(--accent-color); }
+        .delete-btn { background-color: var(--danger-color); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 14px; width: auto; align-self: center; }
+        .record-details { flex-grow: 1; }
+        .record-date { font-size: 1.1em; font-weight: bold; color: var(--primary-color); }
+        .record-weight, .record-exercise { margin-top: 8px; }
+        .record-exercise-memo { margin-top: 5px; font-size: 0.9em; color: #666; background-color: #f0f0f0; padding: 8px; border-radius: 4px; white-space: pre-wrap; }
+        .period-mark { color: var(--primary-color); margin-left: 8px; font-style: normal; cursor: help; }
+        .chart-container { position: relative; margin: 30px auto; height: 300px; width: 100%; }
+        .badge-area { background-color: var(--secondary-color); padding: 20px; border-radius: 12px; margin-top: 25px; }
+        #badge-list { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; }
+        .badge { display: flex; flex-direction: column; align-items: center; width: 100px; padding: 10px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: center; cursor: help; }
+        .badge-icon { font-size: 2.5em; }
+        .badge-title { font-size: 0.8em; font-weight: bold; margin-top: 5px; }
+        .badge.locked { opacity: 0.4; filter: grayscale(80%); }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px 40px 40px; border-radius: 8px; width: 80%; max-width: 700px; position: relative; animation: fadeIn 0.3s; max-height: 85vh; overflow-y: auto; }
+        @keyframes fadeIn { from {opacity: 0; transform: translateY(-20px);} to {opacity: 1; transform: translateY(0);} }
+        .close-btn { color: #aaa; position: absolute; top: 10px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close-btn:hover, .close-btn:focus { color: black; }
+        .guide h3 { text-align: left; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; margin-top: 25px; }
+        .guide ul { padding-left: 20px; }
+        .guide li { margin-bottom: 10px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div id="login-screen" class="screen">
             <h1>わたしの記録アプリ</h1><h2>ようこそ！</h2>
-            <div class="form-group"><label for="login-email">メールアドレス</label><input type="email" id="login-email" placeholder="email@example.com"></div>
-            <div class="form-group"><label for="login-password">パスワード</label><input type="password" id="login-password" placeholder="6文字以上"></div>
+            <div class="form-group"><label for="login-email">メールアドレス</label><input type="email" id="login-email" placeholder="email@example.com" autocomplete="email"></div>
+            <div class="form-group"><label for="login-password">パスワード</label><input type="password" id="login-password" placeholder="6文字以上" autocomplete="current-password"></div>
             <div class="button-group">
                 <button id="login-btn">ログイン</button>
-                <button id="signup-btn" class="sub-button">新規登録</button>
+                <button id="signup-btn" class="sub-button">新規登録はこちら</button>
             </div>
         </div>
 
@@ -60,168 +87,311 @@
             <h2>体重の推移グラフ</h2>
             <div class="chart-container"><canvas id="weightChart"></canvas></div>
             <h2>ちょこっと記録</h2>
-            <form id="record-form"> ... </form> <h2 style="margin-top: 40px;">記録カレンダー</h2>
+            <form id="record-form">
+                <div class="form-group"><label for="date-input">日付</label><input type="date" id="date-input" required></div>
+                <div class="form-group"><label for="weight-input">体重 (kg)</label><input type="number" id="weight-input" step="0.1" placeholder="今日の体重を入力"></div>
+                <div class="form-group">
+                    <div class="checkbox-group"><input type="checkbox" id="exercise-check"><label for="exercise-check">💪 運動しましたか？</label></div>
+                    <div class="checkbox-group"><input type="checkbox" id="period-check"><label for="period-check">🌙 生理日でしたか？</label></div>
+                </div>
+                <div class="form-group" id="exercise-memo-group" style="display: none;"><label for="exercise-memo">運動内容</label><textarea id="exercise-memo" rows="3" placeholder="例: ジムでマシントレーニング30分"></textarea></div>
+                <button type="submit">この内容で記録する</button>
+            </form>
+            <h2 style="margin-top: 40px;">記録カレンダー</h2>
             <ul id="history-list"></ul>
             <div class="button-group">
                 <button id="show-guide-btn" class="sub-button">📖 使い方ガイド</button>
                 <button id="edit-target-btn" class="sub-button">🎯 目標を再設定</button>
-                <button id="logout-btn" class="sub-button">ログアウト</button> </div>
+                <button id="logout-btn" class="sub-button">ログアウト</button>
+            </div>
             <button id="reset-data-btn" class="reset-btn">🗑️ このユーザーの全データをリセット</button>
         </div>
     </div>
     
-    <div id="guide-modal" class="modal"> ... </div> <script>
+    <div id="guide-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <div class="guide">
+                <h2 style="margin-top: 10px;">『わたしの記録アプリ』使い方ガイド 📖✨</h2>
+                <p>このアプリは、あなたの頑張りを「記録」し、「見える化」し、「楽しく」続けるための、あなただけの健康管理アプリです。</p><hr>
+                <h3>🚀 ステップ1：最初の設定</h3>
+                <ul><li><strong>ユーザー登録:</strong> メールアドレスと6文字以上のパスワードで新規登録します。</li><li><strong>目標体重の設定:</strong> 次に、あなたの目標体重を決めます。この目標は後からいつでも変更できます。</li></ul>
+                <h3>✍️ ステップ2：毎日の記録</h3>
+                <p>「ちょこっと記録」エリアで、以下の項目を入力して紫色の「記録する」ボタンを押します。</p>
+                <ul><li><strong>体重:</strong> その日の体重を入力します。</li><li><strong>運動 `💪`:</strong> 運動したらチェックを入れ、内容をメモできます。</li><li><strong>生理日 `🌙`:</strong> 生理日であれば、ここにチェックを入れます。</li></ul>
+                <h3>📊 ステップ3：自分の頑張りを振り返る</h3>
+                <ul><li><strong>獲得バッジ `🏆`:</strong> あなたの頑張りに応じて、様々なバッジがもらえます！</li><li><strong>体重の推移グラフ `📈`:</strong> 体重の変化（紫の線）と目標（赤い点線）が一目でわかります。</li><li><strong>記録カレンダー `🗓️`:</strong> 過去の記録が一覧で表示されます。生理日には `🌙` マークがつきます。</li></ul>
+                <h3>⚙️ ステップ4：便利な機能</h3>
+                <ul><li><strong>目標を再設定 `🎯`:</strong> ボタン一つで、いつでも目標体重を変更できます。</li><li><strong>ログアウト:</strong> 使い終わったらログアウトできます。</li></ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
     document.addEventListener('DOMContentLoaded', () => {
         // --- Firebaseの初期化 ---
-        // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-        // const firebaseConfig = {
-  apiKey: "AIzaSyDn3Gm8M0tVHSof3UdZjZ6P2NpQEo6Sj_U",
-  authDomain: "mydata-75f6a.firebaseapp.com",
-  projectId: "mydata-75f6a",
-  storageBucket: "mydata-75f6a.firebasestorage.app",
-  messagingSenderId: "109261190862",
-  appId: "1:109261190862:web:084db3782e289890fb429f"
-};
-        // 
-        // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+        const firebaseConfig = {
+            apiKey: "AIzaSyDn3Gm8M0tVHSof3UdZjZ6P2NpQEo6Sj_U",
+            authDomain: "mydata-75f6a.firebaseapp.com",
+            projectId: "mydata-75f6a",
+            storageBucket: "mydata-75f6a.appspot.com",
+            messagingSenderId: "109261190862",
+            appId: "1:109261190862:web:084db3782e289890fb429f"
+        };
         
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // --- DOM要素の取得 (一部変更) ---
+        // --- DOM要素の取得 ---
         const screens = { login: document.getElementById('login-screen'), setup: document.getElementById('setup-screen'), main: document.getElementById('main-app') };
         const loginEmailInput = document.getElementById('login-email');
         const loginPasswordInput = document.getElementById('login-password');
         const loginBtn = document.getElementById('login-btn');
         const signupBtn = document.getElementById('signup-btn');
         const logoutBtn = document.getElementById('logout-btn');
-        // (その他、必要なDOM要素の取得は省略)
-
-        let currentUser = null; // ユーザー情報オブジェクトを保持
-        let dailyRecords = {}; // ローカルのデータキャッシュ
+        const saveSetupBtn = document.getElementById('save-setup-btn');
+        const targetWeightInput = document.getElementById('target-weight');
+        const welcomeMessage = document.getElementById('welcome-message');
+        const displayTargetWeight = document.getElementById('display-target-weight');
+        const recordForm = document.getElementById('record-form');
+        const dateInput = document.getElementById('date-input');
+        const weightInput = document.getElementById('weight-input');
+        const exerciseCheck = document.getElementById('exercise-check');
+        const periodCheck = document.getElementById('period-check');
+        const exerciseMemoGroup = document.getElementById('exercise-memo-group');
+        const exerciseMemo = document.getElementById('exercise-memo');
+        const historyList = document.getElementById('history-list');
+        const badgeList = document.getElementById('badge-list');
+        const chartCanvas = document.getElementById('weightChart');
+        const editTargetBtn = document.getElementById('edit-target-btn');
+        const resetDataBtn = document.getElementById('reset-data-btn');
+        const guideModal = document.getElementById('guide-modal');
+        const showGuideBtn = document.getElementById('show-guide-btn');
+        const closeBtn = document.querySelector('.close-btn');
+        
+        let weightChart = null;
+        let currentUser = null;
+        let dailyRecords = {};
         let userSettings = {};
+        let userBadges = {};
 
-        // --- 画面表示の管理 ---
-        function showScreen(screenName) {
-            Object.values(screens).forEach(s => s.classList.remove('active'));
-            if(screens[screenName]) screens[screenName].classList.add('active');
-        }
+        const badges = {
+            firstStep: { title: 'はじめの一歩', description: '最初の記録を達成！', icon: '👟' }, record7: { title: '継続の週間', description: '累計7日間の記録を達成！', icon: '🗓️' },
+            record30: { title: '習慣の達人', description: '累計30日間の記録を達成！', icon: '🌟' }, weightLoss1: { title: 'ナイスファイト', description: '初めて1kg以上の減量に成功！', icon: '💪' },
+            targetAchieved: { title: '目標達成', description: '目標体重に到達！おめでとう！', icon: '🎉' }
+        };
 
-        // --- Firebase Authentication (ログイン状態の監視) ---
+        function showScreen(screenName) { Object.values(screens).forEach(s=>s.classList.remove('active')); if(screens[screenName]) screens[screenName].classList.add('active'); }
+
         auth.onAuthStateChanged(async (user) => {
             if (user) {
-                // ユーザーがログインしている場合
                 currentUser = user;
                 const userDocRef = db.collection('users').doc(user.uid);
                 const userDoc = await userDocRef.get();
-
                 if (userDoc.exists) {
-                    // 設定情報がある -> メイン画面へ
-                    userSettings = userDoc.data().settings || {};
+                    const data = userDoc.data();
+                    userSettings = data.settings || {};
+                    userBadges = data.badges || {};
                     await loadRecordsFromFirestore();
                     showMainApp();
                 } else {
-                    // 設定情報がない -> 初期設定画面へ
                     showScreen('setup');
                 }
             } else {
-                // ユーザーがログアウトしている場合
                 currentUser = null;
                 showScreen('login');
             }
         });
 
-        // --- 新規登録処理 ---
         signupBtn.addEventListener('click', async () => {
             const email = loginEmailInput.value;
             const password = loginPasswordInput.value;
             try {
                 await auth.createUserWithEmailAndPassword(email, password);
-                // 登録成功後、onAuthStateChangedが自動で発火し、初期設定画面に遷移する
-            } catch (error) {
-                alert("登録に失敗しました: " + error.message);
-            }
+            } catch (error) { alert("登録エラー: " + error.message); }
         });
 
-        // --- ログイン処理 ---
         loginBtn.addEventListener('click', async () => {
             const email = loginEmailInput.value;
             const password = loginPasswordInput.value;
             try {
                 await auth.signInWithEmailAndPassword(email, password);
-                // ログイン成功後、onAuthStateChangedが自動で発火する
-            } catch (error) {
-                alert("ログインに失敗しました: " + error.message);
-            }
+            } catch (error) { alert("ログインエラー: " + error.message); }
         });
         
-        // --- ログアウト処理 ---
-        logoutBtn.addEventListener('click', () => {
-            if (confirm('ログアウトしますか？')) {
-                auth.signOut();
-            }
-        });
+        logoutBtn.addEventListener('click', () => { if (confirm('ログアウトしますか？')) { auth.signOut(); } });
 
-        // --- 初期設定の保存 ---
-        const saveSetupBtn = document.getElementById('save-setup-btn');
         saveSetupBtn.addEventListener('click', async () => {
-            const targetWeight = parseFloat(document.getElementById('target-weight').value);
+            const targetWeight = parseFloat(targetWeightInput.value);
             if (currentUser && targetWeight > 0) {
-                const newSettings = { targetWeight: targetWeight };
-                await db.collection('users').doc(currentUser.uid).set({ settings: newSettings });
-                userSettings = newSettings;
+                userSettings = { targetWeight: targetWeight };
+                userBadges = {};
+                await db.collection('users').doc(currentUser.uid).set({ settings: userSettings, badges: userBadges });
+                await loadRecordsFromFirestore();
                 showMainApp();
-            } else {
-                alert('有効な目標体重を入力してください。');
-            }
+            } else { alert('有効な目標体重を入力してください。'); }
         });
         
-        // --- Firestoreからデータを読み込む ---
         async function loadRecordsFromFirestore() {
             if (!currentUser) return;
             const recordsSnapshot = await db.collection('users').doc(currentUser.uid).collection('records').get();
             dailyRecords = {};
-            recordsSnapshot.forEach(doc => {
-                dailyRecords[doc.id] = doc.data();
-            });
+            recordsSnapshot.forEach(doc => { dailyRecords[doc.id] = doc.data(); });
         }
         
-        // --- メイン画面の表示と再描画 ---
-        function showMainApp() { /* ... onAuthStateChangedから呼ばれる ... */ }
-        function renderAll() { /* ... 内部でFirestoreのデータ(dailyRecords)を使うように変更 ... */ }
+        function showMainApp() {
+            if (!currentUser) return;
+            welcomeMessage.textContent = (currentUser.email || 'ゲスト') + 'の記録';
+            dateInput.value = new Date().toISOString().split('T')[0];
+            loadRecordForDate(dateInput.value);
+            renderAll();
+            showScreen('main');
+        }
 
-        // --- 記録フォームの保存処理 ---
-        const recordForm = document.getElementById('record-form');
+        function renderAll() {
+            if (!currentUser) return;
+            displayTargetWeight.textContent = parseFloat(userSettings.targetWeight || 0).toFixed(1);
+            renderHistory();
+            renderBadges();
+            renderWeightChart();
+        }
+        
+        dateInput.addEventListener('change', () => loadRecordForDate(dateInput.value));
+        exerciseCheck.addEventListener('change', () => exerciseMemoGroup.style.display = exerciseCheck.checked ? 'block' : 'none');
+
+        function loadRecordForDate(date) {
+            const record = dailyRecords[date];
+            weightInput.value = record?.weight || '';
+            exerciseCheck.checked = record?.didExercise || false;
+            periodCheck.checked = record?.isPeriod || false;
+            exerciseMemo.value = record?.exerciseMemo || '';
+            exerciseMemoGroup.style.display = exerciseCheck.checked ? 'block' : 'none';
+        }
+
         recordForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!currentUser) return;
-            
-            const date = document.getElementById('date-input').value;
+            const date = dateInput.value;
             const recordData = {
-                weight: document.getElementById('weight-input').value ? parseFloat(document.getElementById('weight-input').value) : null,
-                didExercise: document.getElementById('exercise-check').checked,
-                isPeriod: document.getElementById('period-check').checked,
-                exerciseMemo: document.getElementById('exercise-memo').value.trim()
+                weight: weightInput.value ? parseFloat(weightInput.value) : null,
+                didExercise: exerciseCheck.checked, isPeriod: periodCheck.checked,
+                exerciseMemo: exerciseMemo.value.trim()
             };
-
-            // Firestoreに保存
-            await db.collection('users').doc(currentUser.uid).collection('records').doc(date).set(recordData, { merge: true });
-            
-            // ローカルキャッシュも更新
-            dailyRecords[date] = recordData;
-            
-            alert('記録しました！');
-            renderAll();
-            // checkAndAwardBadges(); // バッジ機能も同様にFirestoreベースで再実装が必要
+            if (!date || (recordData.weight === null && !recordData.didExercise && !recordData.isPeriod)) {
+                alert('日付を入力し、体重、運動、生理日のいずれかを記録してください。'); return;
+            }
+            try {
+                await db.collection('users').doc(currentUser.uid).collection('records').doc(date).set(recordData, { merge: true });
+                dailyRecords[date] = recordData;
+                await checkAndAwardBadges();
+                renderAll();
+                alert('記録しました！');
+            } catch (error) { alert("記録の保存に失敗しました: " + error.message); }
         });
-        
-        // (注：renderHistory, renderChart, バッジ機能などの描画関数は、
-        // localStorageではなく、変数`dailyRecords`, `userSettings`を参照するように
-        // 内部ロジックを修正する必要がありますが、基本的な見た目は同じです)
-        
-        // (その他のボタンやモーダルのイベントリスナーは省略)
 
+        function renderHistory() {
+            historyList.innerHTML = ''; if (!currentUser) return;
+            const sortedDates = Object.keys(dailyRecords).sort((a, b) => new Date(b) - new Date(a));
+            if (sortedDates.length === 0) { historyList.innerHTML = '<li>記録はまだありません。</li>'; return; }
+            sortedDates.forEach(date => {
+                const record = dailyRecords[date];
+                const li = document.createElement('li');
+                li.classList.toggle('rest-day', !record.didExercise);
+                const periodMark = record.isPeriod ? `<i class="period-mark" title="体調記録日">🌙</i>` : '';
+                const dateHTML = `<div class="record-date">${date}${periodMark}</div>`;
+                const weightHTML = record.weight ? `<div class="record-weight">⚖️ 体重: <strong>${record.weight.toFixed(1)} kg</strong></div>` : '';
+                let exerciseHTML = '';
+                if (record.didExercise) {
+                    exerciseHTML = `<div class="record-exercise">💪 運動しました</div>`;
+                    if (record.exerciseMemo) exerciseHTML += `<div class="record-exercise-memo">${record.exerciseMemo.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>`;
+                } else if (!record.isPeriod) { exerciseHTML = `<div class="record-exercise" style="color: #888;">🛌 運動: おやすみ</div>`; }
+                li.innerHTML = `<div class="record-details">${dateHTML}${weightHTML}${exerciseHTML}</div><button class="delete-btn" data-date="${date}">削除</button>`;
+                historyList.appendChild(li);
+            });
+        }
+        
+        async function checkAndAwardBadges(){
+            if (!currentUser) return;
+            let newBadgeAwarded = false;
+            const checkAndSetBadge = (badgeId, condition) => {
+                if (!userBadges[badgeId] && condition) {
+                    userBadges[badgeId] = true; newBadgeAwarded = true;
+                    setTimeout(()=>alert(`🎉 新しいバッジ【${badges[badgeId].title}】を獲得しました！`), 100);
+                }
+            };
+            const recordCount = Object.keys(dailyRecords).length;
+            checkAndSetBadge('firstStep', recordCount >= 1);
+            checkAndSetBadge('record7', recordCount >= 7);
+            checkAndSetBadge('record30', recordCount >= 30);
+            const weights = Object.values(dailyRecords).map(r => r.weight).filter(w => w != null);
+            if (weights.length > 0) {
+                const initialWeights = Object.entries(dailyRecords).filter(([,r])=>r.weight!=null).sort((a,b)=>new Date(a[0])-new Date(b[0]));
+                const initialWeight = initialWeights[0][1].weight;
+                const latestWeight = weights[weights.length - 1];
+                checkAndSetBadge('weightLoss1', initialWeight - latestWeight >= 1);
+                checkAndSetBadge('targetAchieved', latestWeight <= userSettings.targetWeight);
+            }
+            if(newBadgeAwarded){ await db.collection('users').doc(currentUser.uid).update({ badges: userBadges }); }
+        }
+        function renderBadges(){
+            badgeList.innerHTML="";
+            for(const t in badges){const r=badges[t],a=document.createElement("div");a.classList.add("badge"),userBadges[t]||a.classList.add("locked"),a.title=r.description,a.innerHTML=`<span class="badge-icon">${r.icon}</span><span class="badge-title">${r.title}</span>`,badgeList.appendChild(a)}
+        }
+        function renderWeightChart() {
+            if (!currentUser) return;
+            const targetWeight = userSettings.targetWeight;
+            const sortedDates = Object.keys(dailyRecords).sort((a, b) => new Date(a) - new Date(b));
+            const labels = []; const dataPoints = [];
+            sortedDates.forEach(date => { if (dailyRecords[date].weight != null) { labels.push(date); dataPoints.push(dailyRecords[date].weight); } });
+            if (weightChart) { weightChart.destroy(); }
+            weightChart = new Chart(chartCanvas, {
+                type: 'line', data: { labels: labels, datasets: [ { label: '体重 (kg)', data: dataPoints, borderColor: 'rgba(106, 27, 154, 0.8)', backgroundColor: 'rgba(106, 27, 154, 0.1)', fill: true, tension: 0.1 }, { label: '目標体重', data: Array(labels.length).fill(targetWeight), borderColor: 'var(--target-line-color)', borderDash: [5, 5], pointRadius: 0, fill: false, borderWidth: 2 } ] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: false } } }
+            });
+        }
+        
+        editTargetBtn.addEventListener('click', async () => {
+            const currentTarget = userSettings.targetWeight;
+            const newTargetStr = prompt('新しい目標体重(kg)を入力してください。', currentTarget);
+            if (newTargetStr === null) return;
+            const newTarget = parseFloat(newTargetStr);
+            if (!isNaN(newTarget) && newTarget > 0) {
+                userSettings.targetWeight = newTarget;
+                await db.collection('users').doc(currentUser.uid).update({ 'settings.targetWeight': newTarget });
+                renderAll();
+                alert(`目標体重を ${newTarget.toFixed(1)} kg に更新しました！`);
+            } else { alert('無効な数値です。正しい体重を入力してください。'); }
+        });
+        historyList.addEventListener('click', async (e) => {
+            if (e.target.classList.contains('delete-btn')) {
+                const dateToDelete = e.target.dataset.date;
+                if (confirm(`${dateToDelete}の記録を削除しますか？`)) {
+                    await db.collection('users').doc(currentUser.uid).collection('records').doc(dateToDelete).delete();
+                    delete dailyRecords[dateToDelete];
+                    renderAll();
+                }
+            }
+        });
+        resetDataBtn.addEventListener('click', async () => {
+            if (confirm(`本当にこのユーザーの全ての記録を削除しますか？この操作は元に戻せません。`)) {
+                if(!currentUser) return;
+                const recordsRef = db.collection('users').doc(currentUser.uid).collection('records');
+                const snapshot = await recordsRef.get();
+                const batch = db.batch();
+                snapshot.docs.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+                await db.collection('users').doc(currentUser.uid).update({badges: {}});
+                dailyRecords = {}; userBadges = {};
+                renderAll();
+                alert('全記録データをリセットしました。');
+            }
+        });
+        showGuideBtn.addEventListener('click', () => { guideModal.style.display = 'block'; });
+        closeBtn.addEventListener('click', () => { guideModal.style.display = 'none'; });
+        window.addEventListener('click', (event) => { if (event.target == guideModal) { guideModal.style.display = 'none'; } });
+
+        initializeApp();
     });
     </script>
 </body>
